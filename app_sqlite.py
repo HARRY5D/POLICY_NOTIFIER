@@ -268,6 +268,19 @@ def view_notifications():
     
     notifications, total = Notification.get_all(page=page, per_page=per_page)
     
+    # Convert sent_at string timestamp to datetime object if it exists
+    for notification in notifications:
+        if notification.get('sent_at'):
+            try:
+                notification['sent_at'] = datetime.fromisoformat(notification['sent_at'].replace('Z', '+00:00'))
+            except ValueError:
+                # If the format is different, try another common format
+                try:
+                    notification['sent_at'] = datetime.strptime(notification['sent_at'], '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    # If conversion fails, leave as string
+                    pass
+    
     # Create a simple pagination class to mimic SQLAlchemy's pagination
     class Pagination:
         def __init__(self, items, page, per_page, total):

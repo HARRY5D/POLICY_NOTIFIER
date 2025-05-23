@@ -146,10 +146,13 @@ class Notification:
         """Get all notifications with pagination, ordered by sent_at desc."""
         conn = get_db_connection()
         offset = (page - 1) * per_page
-        notifications = conn.execute(
+        notification_rows = conn.execute(
             'SELECT * FROM notification ORDER BY sent_at DESC LIMIT ? OFFSET ?',
             (per_page, offset)
         ).fetchall()
+        
+        # Convert Row objects to dictionaries for mutability
+        notifications = [dict(row) for row in notification_rows]
         
         # Get total count for pagination
         total = conn.execute('SELECT COUNT(*) FROM notification').fetchone()[0]

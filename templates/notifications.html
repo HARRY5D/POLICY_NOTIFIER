@@ -36,8 +36,15 @@
                         </thead>
                         <tbody>
                             {% for notification in notifications.items %}
-                            <tr>
-                                <td>{{ notification.sent_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <tr>                                <td>
+                                    {% if notification.sent_at is defined and notification.sent_at is not string and notification.sent_at is not none %}
+                                        {{ notification.sent_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% elif notification.sent_at is string %}
+                                        {{ notification.sent_at }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
                                 <td>{{ notification.policy_id }}</td>
                                 <td>{{ notification.subject }}</td>
                                 <td>{{ notification.recipient }}</td>
