@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Policy Notifier - Home{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1>Policy Notifications</h1>
+        <p class="lead">Keep track of important policy deadlines and receive email reminders.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('add_policy') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Policy
+        </a>
+    </div>
+</div>
+
+<div class="row">    {% if policies %}
+        {% for policy in policies %}
+            {% set days_remaining = (policy.due_date - today).days %}
+            {% set card_class = 'due-soon' if days_remaining <= 7 else ('due-upcoming' if days_remaining <= 30 else 'due-later') %}
+            
+            <div class="col-md-6">
+                <div class="card policy-card {{ card_class }}">                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ policy.name }}</h5>
+                        <div>
+                            <a href="{{ url_for('send_notification_now', id=policy.id) }}" class="btn btn-sm btn-outline-success btn-circle" 
+                               title="Send notification now" onclick="return confirm('Send a notification for this policy now?')">
+                                <i class="fas fa-paper-plane"></i>
+                            </a>
+                            <a href="{{ url_for('edit_policy', id=policy.id) }}" class="btn btn-sm btn-outline-primary btn-circle"
+                               title="Edit policy">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="{{ url_for('delete_policy', id=policy.id) }}" class="btn btn-sm btn-outline-danger btn-circle" 
+                               title="Delete policy" onclick="return confirm('Are you sure you want to delete this policy?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Due Date:</strong> 
+                            <span class="{{ 'text-danger' if days_remaining <= 7 else ('text-warning' if days_remaining <= 30 else 'text-success') }}">
+                                {{ policy.due_date.strftime('%B %d, %Y') }} 
+                                ({% if days_remaining > 0 %}{{ days_remaining }} days remaining{% 
+                                 elif days_remaining == 0 %}Due today{% 
+                                 else %}Overdue by {{ days_remaining|abs }} days{% endif %})
+                            </span>
+                        </div>                        <div class="mb-3">
+                            <strong>Email:</strong> {{ policy['email'] }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Notification Time:</strong> {{ policy['notification_hour'] }}:{{ '%02d' % policy['notification_minute'] }}
+                            {% if policy['notification_hour'] < 12 %}AM{% else %}PM{% endif %}
+                        </div>                        {% if policy['last_notified'] %}
+                        <div class="mb-3">
+                            <strong>Last Notification:</strong> 
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Sent on 
+                                {% if policy.last_notified is none %}
+                                    Unknown
+                                {% elif policy.last_notified is string %}
+                                    {{ policy.last_notified }}
+                                {% else %}
+                                    {{ policy.last_notified.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% if policy.details %}
+                        <div class="mb-3">
+                            <strong>Details:</strong>
+                            <p class="card-text mt-2">{{ policy.details }}</p>
+                        </div>
+                        {% endif %}                    </div>                    <div class="card-footer text-muted">
+                        Created: {% if policy.created_at is none %}Unknown{% elif policy.created_at is string %}{{ policy.created_at }}{% else %}{{ policy.created_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="py-5">
+                <i class="fas fa-clipboard-list fa-5x text-muted mb-3"></i>
+                <h3 class="text-muted">No policies found</h3>
+                <p class="lead">Get started by adding your first policy notification.</p>
+                <a href="{{ url_for('add_policy') }}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-plus"></i> Add Your First Policy
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
